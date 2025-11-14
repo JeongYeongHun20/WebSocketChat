@@ -16,5 +16,13 @@ public class GreetingController {
         return new Greeting(username+": " + HtmlUtils.htmlEscape(message.getMessage()));
     }
 
+    @MessageMapping("/send")
+    @SendTo("/topic/greetings")
+    public Greeting sending(SimpMessageHeaderAccessor headerAccessor)throws Exception{
+        String username = (String) headerAccessor.getSessionAttributes().get("username");
+        return new Greeting(username+"이 입장하셨습니다" );
+
+    }
+
 
 }

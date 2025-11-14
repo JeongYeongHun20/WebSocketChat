@@ -23,7 +23,7 @@ function connect() {
     console.log("보낼 이름 (생성자에 전달):", username);
 
     stompClient = new StompJs.Client({
-        brokerURL: 'ws://localhost:8080/gs-guide-websocket',
+        brokerURL: 'ws://localhost:8080/ws',
         connectHeaders: {
             'username': username
         },
@@ -37,6 +37,7 @@ function connect() {
         stompClient.subscribe('/topic/greetings', (greeting) => {
             showGreeting(JSON.parse(greeting.body).content);
         });
+        enterChatRoom();
     };
 
     stompClient.onWebSocketError = (error) => {
@@ -56,11 +57,16 @@ function disconnect() {
     console.log("Disconnected");
 }
 
-function sendName() {
+function sendMessage() {
     stompClient.publish({
         destination: "/app/hello",
         body: JSON.stringify({'message': $("#message").val()})
     });
+}
+function enterChatRoom(){
+    stompClient.publish({
+        destination: "/app/send"
+    })
 }
 
 function showGreeting(message) {
@@ -71,5 +77,5 @@ $(function () {
     $("form").on('submit', (e) => e.preventDefault());
     $( "#connect" ).click(() => connect());
     $( "#disconnect" ).click(() => disconnect());
-    $( "#send" ).click(() => sendName());
+    $( "#send" ).click(() => sendMessage());
 });
