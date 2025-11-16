@@ -1,60 +1,156 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
-    <title>Hello WebSocket</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <title>WebSocket Chat</title>
+    <!-- Bootstrap 3.3.7 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- StompJS v7 -->
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <!-- Custom App JS -->
     <script src="/app.js"></script>
     <meta charset="UTF-8" />
+    <style>
+        /* (스타일은 이전과 동일) */
+        body { background-color: #f8f8f8; padding-top: 20px; }
+        #sidebar { background-color: #ffffff; padding: 20px; border-radius: 6px; border: 1px solid #ddd; }
+        #sidebar .form-group { display: block; margin-bottom: 15px; }
+        #sidebar button { width: 100%; margin-bottom: 10px; }
+        #create-room-form button { width: auto; }
+        #chat-area { background-color: #ffffff; border-radius: 6px; border: 1px solid #ddd; padding: 20px; }
+        #conversation-wrapper { height: 60vh; border: 1px solid #eee; border-radius: 4px; overflow-y: auto; margin-bottom: 20px; padding: 10px; }
+        #message-form { display: flex; }
+        #message-form input { flex-grow: 1; }
+        #message-form button { margin-left: 10px; }
+
+        #logout-btn {
+            display: none;
+        }
+
+        /* [신규] 회원가입 폼 스타일 */
+        #register-form {
+            display: none; /* 기본적으로 숨김 */
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        #register-form h5 {
+            margin-top: 0;
+            font-weight: bold;
+        }
+        /* 회원가입 제출 버튼은 100% 너비가 아님 */
+        #submit-register-btn {
+            width: auto;
+        }
+        /* 회원가입 취소 버튼 */
+        #cancel-register-btn {
+            width: auto;
+            float: right;
+        }
+    </style>
 </head>
 <body>
 <noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
     enabled. Please enable
     Javascript and reload this page!</h2></noscript>
+
 <div id="main-content" class="container">
     <div class="row">
-        <div class="col-md-6">
-            <form class="form-inline">
-                <div class="form-group">
-                    <label for="connect">WebSocket connection:</label>
-                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
-                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
-                    </button>
-                </div>
-                <div class="form-group">
-                    <label for="name">What is your name?</label>
-                    <input type="text" id="name" class="form-control" placeholder="Your name here...">
 
+        <!-- ========================== -->
+        <!--   왼쪽 사이드바 (30%)   -->
+        <!-- ========================== -->
+        <div class="col-md-3" id="sidebar">
+            <h4>Login & Rooms</h4>
+
+            <form id="login-form-area" onsubmit="event.preventDefault();">
+
+                <div id="login-form">
+                    <div class="form-group">
+                        <label for="email">ID:</label>
+                        <input type="text" id="email" class="form-control" placeholder="Your Email here...">
+                    </div>
+                    <div class="form-group">
+                        <label for="pwd">Password:</label>
+                        <input type="password" id="pwd" class="form-control" placeholder="Your Password...">
+                    </div>
+                    <div class="form-group">
+                        <button id="login-btn" class="btn btn-primary" type="submit">Login</button>
+                        <button id="register-btn" class="btn btn-info" type="button">Register</button>
+                    </div>
+                </div>
+
+                <!--
+                    ↓↓↓ [신규] 회원가입 폼 (확장/축소됨) ↓↓↓
+                -->
+                <div id="register-form">
+                    <h5>Create new account</h5>
+                    <div class="form-group">
+                        <label for="register-name">Name (ID):</label>
+                        <input type="text" id="register-name" class="form-control" placeholder="New ID (e.g., alice)">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-pwd">Password:</label>
+                        <input type="password" id="register-pwd" class="form-control" placeholder="New Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email:</label>
+                        <input type="email" id="register-email" class="form-control" placeholder="your@email.com">
+                    </div>
+                    <!-- (참고) email 필드는 DB 스키마에 추가하셔야 합니다. -->
+                    <button id="submit-register-btn" class="btn btn-success" type="button">Submit Register</button>
+                    <button id="cancel-register-btn" class="btn btn-default" type="button">Cancel</button>
+                </div>
+
+
+                <!-- 로그아웃 버튼 (로그인 성공 시 이 버튼을 보여줘야 함) -->
+                <div id="logout-form" style="display: none;">
+                    <p><strong id="login-username"></strong> 님, 환영합니다.</p>
+                    <button id="logout-btn" class="btn btn-danger" type="button">Logout</button>
                 </div>
             </form>
-        </div>
-        <div class="col-md-6">
-            <form class="form-inline">
 
-                <div class="form-group">
-                    <label for="message">What is your name?</label>
-                    <input type="text" id="message" class="form-control" placeholder="Your message here...">
+            <hr>
+            <!-- 채팅방 목록 (로그인 후에 보여주는 것이 좋음) -->
+            <div id="room-area" style="display: none;">
+                <h4>Chat Rooms</h4>
+                <form id="create-room-form" class="input-group" style="margin-bottom: 15px;">
+                    <input type="text" id="room-name" class="form-control" placeholder="New room name...">
+                    <span class="input-group-btn">
+                        <button id="create-room" class="btn btn-default" type="submit">Create</button>
+                    </span>
+                </form>
+
+                <div id="room-list" class="list-group">
+                    <!-- app.js가 이 안에 <a> 태그를 동적으로 추가합니다 -->
                 </div>
-                <button id="send" class="btn btn-default" type="submit">Send</button>
+            </div>
+        </div>
 
+        <!-- ========================== -->
+        <!--   오른쪽 채팅창 (70%)   -->
+        <!-- ========================== -->
+        <div class="col-md-9" id="chat-area">
+            <!-- ... (오른쪽 영역은 변경 없음) ... -->
+            <h3 id="current-room-name">Lobby</h3>
+            <hr>
+            <div id="conversation-wrapper">
+                <table id="conversation" class="table table-striped">
+                    <tbody id="greetings">
+                    <tr><td>로그인 후 채팅방에 입장해 주세요.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <form class="form-inline" id="message-form" style="display: none;">
+                <div class="form-group" style="flex-grow: 1;">
+                    <input type="text" id="message" class="form-control" placeholder="Your message here..." style="width: 100%;">
+                </div>
+                <button id="send" class="btn btn-primary" type="submit">Send</button>
             </form>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <table id="conversation" class="table table-striped">
-                <thead>
-                <tr>
-                    <th>ChatRoom</th>
-                </tr>
-                </thead>
-                <tbody id="greetings">
-                </tbody>
-            </table>
-        </div>
+
     </div>
 </div>
+
 </body>
 </html>
