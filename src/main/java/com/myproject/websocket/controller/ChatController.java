@@ -1,0 +1,51 @@
+package com.myproject.websocket.controller;
+
+
+import com.myproject.websocket.domain.ChatRoom;
+import com.myproject.websocket.domain.Member;
+import com.myproject.websocket.dto.ChatRoomDto;
+import com.myproject.websocket.repository.ChatRoomRepository;
+import com.myproject.websocket.service.ChatService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/chat")
+@RequiredArgsConstructor
+@Slf4j
+public class ChatController {
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatService chatService;
+    @GetMapping("/rooms")
+    public List<ChatRoomDto> loadRooms(HttpServletRequest request){
+        //session이 없을시 true: 새로 생서한 session반환, false: null값을 반환
+        HttpSession session=request.getSession(false);
+        loginCheck(session);
+        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+
+        return chatService.findRooms(loginUser);
+    }
+
+    @PostMapping("/room")
+    public ChatRoomDto createRoom(@RequestParam String roomName, HttpServletRequest request){
+        HttpSession session= request.getSession(false);
+        loginCheck(session);
+        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        return chatService.createRoom(loginUser, roomName);
+    }
+
+    private void loginCheck(HttpSession session) {
+        if (session == null || session.getAttribute("LOGIN_USER") == null) {
+            throw new IllegalStateException("로그인이 필요합니다.");
+        }
+    }
+
+
+
+}

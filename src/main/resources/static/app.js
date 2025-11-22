@@ -40,8 +40,8 @@ function setConnected(connected) {
     document.getElementById('logout-form').style.display = connected ? 'block' : 'none';
 
     // 로그인/등록 버튼 비활성화
-    document.getElementById('username').disabled = connected;
-    document.getElementById('password').disabled = connected;
+    document.getElementById('email').disabled = connected;
+    document.getElementById('pwd').disabled = connected;
     document.getElementById('login-btn').disabled = connected;
     document.getElementById('register-btn').disabled = connected;
 
@@ -51,7 +51,7 @@ function setConnected(connected) {
 
     if (connected) {
         // 로그인 성공 시 환영 메시지
-        const username = document.getElementById('username').value;
+        const username = document.getElementById('email').value;
         document.getElementById('login-username').textContent = username;
     } else {
         // 로그아웃 시 채팅창 비우기
@@ -213,7 +213,7 @@ function deactivateWebSocket() {
 function loadRooms() {
     document.getElementById('room-list').innerHTML = ''; // 기존 목록 비우기
 
-    fetch("/api/rooms") // (이 API는 서버에 만드셔야 합니다)
+    fetch("/chat/rooms") // (이 API는 서버에 만드셔야 합니다)
         .then(response => response.json())
         .then(rooms => {
             // rooms는 [ {id: "1", name: "개발팀"}, {id: "2", name: "기획팀"} ] 형태
@@ -221,11 +221,6 @@ function loadRooms() {
                 addRoomToList(room.name, room.id);
             });
 
-            // (선택) 첫 번째 방이 있다면 자동으로 입장
-            if (rooms.length > 0) {
-                const firstRoom = rooms[0];
-                switchRoom(firstRoom.id, firstRoom.name);
-            }
         })
         .catch(error => console.error("Error loading rooms:", error));
 }
@@ -236,10 +231,13 @@ function createRoom(event) {
     const roomName = document.getElementById('room-name').value.trim();
     if (!roomName) return;
 
-    fetch("/api/room", { // (이 API는 서버에 만드셔야 합니다)
+// 👇 이렇게 한 줄로 줄일 수 있습니다.
+    const nameData = new URLSearchParams({ roomName });
+
+    fetch("/chat/room", { // (이 API는 서버에 만드셔야 합니다)
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: roomName }) // (서버가 {name: "..."}을 받는다고 가정)
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: nameData// (서버가 {name: "..."}을 받는다고 가정)
     })
         .then(response => response.json())
         .then(createdRoom => {
@@ -247,8 +245,6 @@ function createRoom(event) {
             addRoomToList(createdRoom.name, createdRoom.id);
             document.getElementById('room-name').value = '';
 
-            // (선택) 만든 방으로 바로 입장
-            switchRoom(createdRoom.id, createdRoom.name);
         })
         .catch(error => console.error("Error creating room:", error));
 }
@@ -256,7 +252,7 @@ function createRoom(event) {
 // 12. (신규) 방 목록에 <a> 태그 추가 (헬퍼 함수)
 function addRoomToList(name, id) {
     const roomList = document.getElementById('room-list');
-
+    console.log(name);
     const link = document.createElement('a');
     link.href = '#';
     link.className = 'list-group-item';
@@ -289,7 +285,7 @@ function switchRoom(roomId, roomName) {
     document.querySelector(`#room-list [data-room-id="${roomId}"]`).classList.add('active');
 
     // 5. ★ (Fetch) 과거 메시지 내역 불러오기
-    fetch(`/api/room/${roomId}/messages`)
+    fetch(`/chat/room/${roomId}/messages`)
         .then(response => response.json())
         .then(messages => {
             document.getElementById('greetings').innerHTML = ''; // 'Loading' 메시지 지우기

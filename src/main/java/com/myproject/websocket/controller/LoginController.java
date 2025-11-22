@@ -1,5 +1,6 @@
 package com.myproject.websocket.controller;
 
+import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -17,10 +18,12 @@ public class LoginController {
     @PostMapping("/login")
     @ResponseBody
     public String login(@RequestParam("email")String email, @RequestParam("pwd")String pwd, HttpServletRequest request) {
-        String memberPassword=memberRepository.findByEmail(email).getPwd();
+        Member member = memberRepository.findByEmail(email);
+
+        String memberPassword=member.getPwd();
         if (memberPassword != null && memberPassword.equals(pwd)) {
             HttpSession session = request.getSession();
-            session.setAttribute("LOGIN_USER", email);
+            session.setAttribute("LOGIN_USER", member);
             return "로그인 성공";
         }else{
             return "로그인 실패";
