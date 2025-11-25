@@ -4,6 +4,7 @@ package com.myproject.websocket.controller;
 import com.myproject.websocket.domain.ChatRoom;
 import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.dto.ChatRoomDto;
+import com.myproject.websocket.dto.MemberRoomDto;
 import com.myproject.websocket.repository.ChatRoomRepository;
 import com.myproject.websocket.service.ChatService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +21,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
-    private final ChatRoomRepository chatRoomRepository;
     private final ChatService chatService;
+
     @GetMapping("/rooms")
     public List<ChatRoomDto> loadRooms(HttpServletRequest request){
         //session이 없을시 true: 새로 생서한 session반환, false: null값을 반환

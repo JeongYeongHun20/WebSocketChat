@@ -16,6 +16,7 @@ public class ChatRoom {
 
     private String name;
 
+    //방장 id
     @ManyToOne(fetch =FetchType.LAZY)
     @JoinColumn(name = "memberId")
     private Member member;
@@ -25,9 +26,10 @@ public class ChatRoom {
     private LocalDateTime createdAt;
 
 
-    public static ChatRoom create(String roomName){
+    public static ChatRoom create(Member loginUser,String roomName){
         ChatRoom chatRoom=new ChatRoom();
         chatRoom.name=roomName;
+        chatRoom.member=loginUser;
         return chatRoom;
 
 
