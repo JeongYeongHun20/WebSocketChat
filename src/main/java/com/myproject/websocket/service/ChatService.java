@@ -6,6 +6,7 @@ import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.domain.MemberRoom;
 import com.myproject.websocket.dto.ChatMessageDto;
 import com.myproject.websocket.dto.ChatRoomDto;
+import com.myproject.websocket.dto.MemberRoomDto;
 import com.myproject.websocket.repository.ChatMessageRepository;
 import com.myproject.websocket.repository.ChatRoomRepository;
 import com.myproject.websocket.repository.MemberRepository;
@@ -37,6 +38,7 @@ public class ChatService {
     public ChatRoomDto createRoom(Member loginUser, String roomName){
         ChatRoom chatRoom = ChatRoom.create(loginUser,roomName);
         ChatRoom save = chatRoomRepository.save(chatRoom);
+
         MemberRoom memberRoom = MemberRoom.create(loginUser, chatRoom);
         memberRoomRepository.save(memberRoom);
 
@@ -62,9 +64,21 @@ public class ChatService {
         Member loginUser = memberRepository.findById(member.getId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다"));
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(()->new IllegalArgumentException("존재하지 않는 방입니다."));
+                .orElseThrow(()->new IllegalArgumentException("존재하지 않는 채팅방 입니다."));
         ChatMessage chatMessage = ChatMessage.create(chatRoom, loginUser, context);
         return chatMessageRepository.save(chatMessage);
+    }
+
+    public ChatRoomDto joinRoom(Long roomId, Member member){
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방 입니다."));
+        Member loginUser = memberRepository.findById(member.getId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다"));
+
+        memberRoomRepository.save(MemberRoom.create(loginUser, chatRoom));
+
+        return ChatRoomDto.from(chatRoom);
+
     }
 
 

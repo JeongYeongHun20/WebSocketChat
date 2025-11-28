@@ -20,6 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 채팅 관련 버튼 ---
     document.getElementById('create-room-form').addEventListener('submit', createRoom);
+    document.getElementById('join-room-form').addEventListener('submit', (e) => {
+        e.preventDefault(); // 새로고침 막기
+
+        const roomIdInput = document.getElementById('join-room-id');
+        const roomId = roomIdInput.value.trim();
+
+        if (!roomId) {
+            alert("참여할 방 ID를 입력하세요.");
+            return;
+        }
+
+        // 실제 입장 로직 호출 (이름은 모르니까 null로 넘김 -> 서버에서 받아올 예정)
+        join(roomId, "");
+
+        // 입력창 비우기
+        roomIdInput.value = '';
+    });
     document.getElementById('message-form').addEventListener('submit', sendMessage);
 
     // --- 방 목록 클릭 (이벤트 위임) ---
@@ -31,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
             switchRoom(roomId, roomName);
         }
     });
+
+
 });
 
 // 3. UI 상태 변경 함수
@@ -234,10 +253,10 @@ function createRoom(event) {
 // 👇 이렇게 한 줄로 줄일 수 있습니다.
     const nameData = new URLSearchParams({ roomName });
 
-    fetch("/chat/room", { // (이 API는 서버에 만드셔야 합니다)
+    fetch("/chat/room", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: nameData// (서버가 {name: "..."}을 받는다고 가정)
+        body: nameData
     })
         .then(response => response.json())
         .then(createdRoom => {
@@ -326,13 +345,98 @@ function showGreeting(message) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
 
+    // 1. 전체를 감싸는 Flex 컨테이너 생성 (양쪽 정렬용)
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.justifyContent = 'space-between'; // 좌우 끝으로 밀어내기
+    div.style.alignItems = 'center'; // 세로 중앙 정렬
 
-    td.textContent = message.memberId + ": " + message.context;
+    // 2. 왼쪽: 메시지 내용 (이름 + 내용)
+    const messageSpan = document.createElement('span');
+    // (참고: DTO에서 sender로 바꿨다면 message.sender로 수정하세요)
+    messageSpan.textContent = message.memberId + ": " + message.context;
+    messageSpan.style.wordBreak = 'break-all'; // 긴 단어 줄바꿈
 
+    // 3. 오른쪽: 시간 표시
+    const timeSpan = document.createElement('span');
+    // created_at이 있으면 그 시간, 없으면 현재 시간
+    const dateObj = message.createdAt ? new Date(message.createdAt) : new Date();
+    const timeString = dateObj.toLocaleTimeString([], { day: '2-digit',hour: '2-digit', minute: '2-digit' });
+
+    timeSpan.textContent = timeString;
+
+    // 시간 스타일 (회색, 작게, 오른쪽 정렬)
+    timeSpan.style.color = '#999';
+    timeSpan.style.fontSize = '0.8em';
+    timeSpan.style.minWidth = '70px'; // 시간 영역 최소 너비 확보
+    timeSpan.style.textAlign = 'right';
+    timeSpan.style.marginLeft = '10px';
+
+    // 4. 조립 (div 안에 메시지와 시간을 넣음)
+    div.appendChild(messageSpan);
+    div.appendChild(timeSpan);
+
+    // 5. td에 div를 넣음
+    td.appendChild(div);
     tr.appendChild(td);
     greetingsTbody.appendChild(tr);
 
     // 스크롤을 맨 아래로
     const wrapper = document.getElementById('conversation-wrapper');
-    wrapper.scrollTop = wrapper.scrollHeight;
+    if (wrapper) {
+        wrapper.scrollTop = wrapper.scrollHeight;
+    }
+}
+
+function join(roomId, roomName) {
+    if (roomId === currentRoomId || !stompClient || !stompClient.connected) {
+        return;
+    }
+
+    // 1. 기존 구독 해제
+    if (currentSubscription) {
+        currentSubscription.unsubscribe();
+    }
+
+    // 2. 채팅창 비우기 및 로딩 표시
+    document.getElementById('greetings').innerHTML = '<tr><td>Loading...</td></tr>';
+    document.getElementById('current-room-name').textContent = roomName || 'Unknown Room';
+    // (roomName이 없을 수도 있으니 방어코드 추가)
+
+    // 3. (Fetch) 방 정보 가져오기 -> 목록 추가 -> UI 활성화
+    fetch(`/chat/roomss/${roomId}`)
+        .then(response => {
+            if (!response.ok) throw new Error("방을 찾을 수 없습니다.");
+            return response.json();
+        })
+        .then(chatRoom => {
+            // A. 방 목록에 없는 경우에만 추가하는 로직이 있으면 좋음 (중복 방지)
+            // 일단 기존 로직대로 추가
+            addRoomToList(chatRoom.name, chatRoom.id);
+
+            // B. 데이터 갱신
+            currentRoomId = roomId;
+
+            // C. ★ UI 조작은 요소가 생성된 "여기서" 해야 합니다. ★
+            // 1) 기존 active 제거
+            document.querySelectorAll('#room-list .list-group-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // 2) 새 방 active 추가
+            const targetRoom = document.querySelector(`#room-list [data-room-id="${roomId}"]`);
+            if (targetRoom) {
+                targetRoom.classList.add('active');
+            } else {
+                console.error("방금 추가했는데 태그를 못 찾겠어요!");
+            }
+
+            // D. (중요) 채팅방 구독 및 이전 메시지 로드 로직이 빠져있습니다!
+            // 아래 함수를 호출하거나 로직을 여기에 넣어야 실제 채팅이 가능합니다.
+            subscribeToRoom(roomId);
+        })
+        .catch(error => {
+            console.error("Error joining room:", error);
+            alert("방 입장에 실패했습니다.");
+        });
 }

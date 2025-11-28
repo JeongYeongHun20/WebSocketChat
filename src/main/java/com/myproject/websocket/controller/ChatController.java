@@ -67,11 +67,24 @@ public class ChatController {
         simpMessagingTemplate.convertAndSend("/topic/room/"+roomId,messageDto);
     }
 
+    @GetMapping("/roomss/{roomId}")
+    public ChatRoomDto joinRoom(@PathVariable("roomId") Long roomId, HttpServletRequest request ){
+        log.info("joinRoom");
+        HttpSession session = request.getSession(false);
+        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        return chatService.joinRoom(roomId, loginUser);
+
+
+    }
+
+
     private void loginCheck(HttpSession session) {
         if (session == null || session.getAttribute("LOGIN_USER") == null) {
             throw new IllegalStateException("로그인이 필요합니다.");
         }
     }
+
+
 
 
 
