@@ -17,7 +17,6 @@ public class WebSocketEventListener {
         Object loginUserObj = accessor.getSessionAttributes().get("LOGIN_USER");
 
         if (loginUserObj != null) {
-            // Member 객체로 캐스팅해서 사용 (Member 클래스 import 필요)
             Member member = (Member) loginUserObj;
             System.out.println("[입장] " + member.getName() + " 님이 연결되었습니다.");
         } else {

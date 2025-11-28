@@ -326,10 +326,8 @@ function showGreeting(message) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
 
-    // message가 (과거 내역) 객체일 수도, (실시간) JSON 문자열일 수도 있음
-    // 서버 로직에 따라 이 부분을 통일해야 함
-    // (여기서는 message가 {sender: "...", content: "..."} 객체라고 가정)
-    td.textContent = message.sender + ": " + message.content;
+
+    td.textContent = message.memberId + ": " + message.context;
 
     tr.appendChild(td);
     greetingsTbody.appendChild(tr);
