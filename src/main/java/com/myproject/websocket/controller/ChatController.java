@@ -1,28 +1,21 @@
 package com.myproject.websocket.controller;
 
 
-import com.myproject.websocket.domain.ChatMessage;
-import com.myproject.websocket.domain.ChatRoom;
 import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.dto.ChatMessageDto;
 import com.myproject.websocket.dto.ChatRoomDto;
-import com.myproject.websocket.dto.MemberRoomDto;
-import com.myproject.websocket.repository.ChatMessageRepository;
-import com.myproject.websocket.repository.ChatRoomRepository;
 import com.myproject.websocket.service.ChatService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.IllformedLocaleException;
 import java.util.List;
 
 @RestController
@@ -67,14 +60,23 @@ public class ChatController {
         simpMessagingTemplate.convertAndSend("/topic/room/"+roomId,messageDto);
     }
 
-    @GetMapping("/roomss/{roomId}")
-    public ChatRoomDto joinRoom(@PathVariable("roomId") Long roomId, HttpServletRequest request ){
+    @GetMapping("/rooms/{roomId}")
+    public ChatRoomDto joinRoom(@PathVariable(name = "roomId") Long roomId, HttpServletRequest request ){
         log.info("joinRoom");
         HttpSession session = request.getSession(false);
         Member loginUser = (Member) session.getAttribute("LOGIN_USER");
         return chatService.joinRoom(roomId, loginUser);
 
 
+    }
+
+    @DeleteMapping("/rooms/{roomId}")
+    public ResponseEntity<String> deleteRoom(@PathVariable(name = "roomId") Long roomId, HttpServletRequest request){
+        log.info("deleteRoom");
+        HttpSession session=request.getSession(false);
+        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        chatService.deleteRoom(loginUser.getId(), roomId);
+        return ResponseEntity.ok("delete complete");
     }
 
 

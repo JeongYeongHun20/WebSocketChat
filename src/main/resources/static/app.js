@@ -39,13 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('message-form').addEventListener('submit', sendMessage);
 
-    // --- 방 목록 클릭 (이벤트 위임) ---
     document.getElementById('room-list').addEventListener('click', (e) => {
-        if (e.target && e.target.classList.contains('list-group-item')) {
-            e.preventDefault();
-            const roomId = e.target.dataset.roomId; // data-room-id
+        e.preventDefault(); // a 태그 이동 방지
+
+        // Case 1: 방 이름 클릭 -> 방 입장
+        if (e.target.classList.contains('room-link-item')) {
+            const roomId = e.target.dataset.roomId;
             const roomName = e.target.textContent;
             switchRoom(roomId, roomName);
+        }
+        // Case 2: 나가기(Exit) 버튼 클릭 -> 방 삭제(퇴장)
+        else if (e.target.classList.contains('room-delete-btn')) {
+            const roomId = e.target.dataset.roomId;
+            if(confirm("정말 이 방을 나가시겠습니까?")) {
+                leaveRoom(roomId);
+            }
         }
     });
 
@@ -235,7 +243,6 @@ function loadRooms() {
     fetch("/chat/rooms") // (이 API는 서버에 만드셔야 합니다)
         .then(response => response.json())
         .then(rooms => {
-            // rooms는 [ {id: "1", name: "개발팀"}, {id: "2", name: "기획팀"} ] 형태
             rooms.forEach(room => {
                 addRoomToList(room.name, room.id);
             });
@@ -268,17 +275,31 @@ function createRoom(event) {
         .catch(error => console.error("Error creating room:", error));
 }
 
-// 12. (신규) 방 목록에 <a> 태그 추가 (헬퍼 함수)
+// 12. [수정] 방 목록에 아이템 추가 (이름 7: 버튼 3)
 function addRoomToList(name, id) {
     const roomList = document.getElementById('room-list');
-    console.log(name);
+
+    // 1. 겉을 감싸는 컨테이너 (Row)
+    const wrapper = document.createElement('div');
+    wrapper.className = 'list-group-item room-item-row'; // CSS 클래스 적용
+
+    // 2. 방 이름 링크 (70%)
     const link = document.createElement('a');
     link.href = '#';
-    link.className = 'list-group-item';
-    link.dataset.roomId = id; // data-room-id="id"
+    link.className = 'room-link-item'; // 클릭 대상 클래스
+    link.dataset.roomId = id;
     link.textContent = name;
 
-    roomList.appendChild(link);
+    // 3. 나가기 버튼 (30%)
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger room-delete-btn'; // 클릭 대상 클래스
+    delBtn.dataset.roomId = id; // 버튼에도 ID 심어두기
+    delBtn.textContent = 'Exit';
+
+    // 4. 조립
+    wrapper.appendChild(link);
+    wrapper.appendChild(delBtn);
+    roomList.appendChild(wrapper);
 }
 
 // 13. (신규) 방 전환 (Fetch + Subscribe)
@@ -389,54 +410,44 @@ function showGreeting(message) {
 }
 
 function join(roomId, roomName) {
-    if (roomId === currentRoomId || !stompClient || !stompClient.connected) {
-        return;
-    }
-
-    // 1. 기존 구독 해제
-    if (currentSubscription) {
-        currentSubscription.unsubscribe();
-    }
-
-    // 2. 채팅창 비우기 및 로딩 표시
-    document.getElementById('greetings').innerHTML = '<tr><td>Loading...</td></tr>';
-    document.getElementById('current-room-name').textContent = roomName || 'Unknown Room';
-    // (roomName이 없을 수도 있으니 방어코드 추가)
-
-    // 3. (Fetch) 방 정보 가져오기 -> 목록 추가 -> UI 활성화
-    fetch(`/chat/roomss/${roomId}`)
+    fetch(`/chat/rooms/${roomId}`)
         .then(response => {
             if (!response.ok) throw new Error("방을 찾을 수 없습니다.");
             return response.json();
         })
         .then(chatRoom => {
-            // A. 방 목록에 없는 경우에만 추가하는 로직이 있으면 좋음 (중복 방지)
-            // 일단 기존 로직대로 추가
             addRoomToList(chatRoom.name, chatRoom.id);
-
-            // B. 데이터 갱신
-            currentRoomId = roomId;
-
-            // C. ★ UI 조작은 요소가 생성된 "여기서" 해야 합니다. ★
-            // 1) 기존 active 제거
-            document.querySelectorAll('#room-list .list-group-item').forEach(el => {
-                el.classList.remove('active');
-            });
-
-            // 2) 새 방 active 추가
-            const targetRoom = document.querySelector(`#room-list [data-room-id="${roomId}"]`);
-            if (targetRoom) {
-                targetRoom.classList.add('active');
-            } else {
-                console.error("방금 추가했는데 태그를 못 찾겠어요!");
-            }
-
-            // D. (중요) 채팅방 구독 및 이전 메시지 로드 로직이 빠져있습니다!
-            // 아래 함수를 호출하거나 로직을 여기에 넣어야 실제 채팅이 가능합니다.
-            subscribeToRoom(roomId);
+            switchRoom(roomId,roomName)
         })
         .catch(error => {
             console.error("Error joining room:", error);
             alert("방 입장에 실패했습니다.");
         });
+}
+
+// [신규] 방 나가기 (삭제)
+function leaveRoom(roomId) {
+    // DELETE 메소드로 요청
+    fetch(`/chat/rooms/${roomId}`, {
+        method: 'DELETE'
+    })
+        .then(response => {
+            if (response.ok) {
+                alert("방에서 퇴장했습니다.");
+
+                // 현재 보고 있던 방이라면 로비로 튕겨내기
+                if (currentRoomId === roomId) {
+                    document.getElementById('greetings').innerHTML = '';
+                    document.getElementById('current-room-name').textContent = 'Lobby';
+                    currentRoomId = null;
+                    if(currentSubscription) currentSubscription.unsubscribe();
+                }
+
+                // 목록 다시 로드
+                loadRooms();
+            } else {
+                alert("퇴장 실패");
+            }
+        })
+        .catch(error => console.error("Error leaving room:", error));
 }
