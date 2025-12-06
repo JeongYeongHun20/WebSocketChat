@@ -318,7 +318,7 @@ function switchRoom(roomId, roomName) {
     document.getElementById('current-room-name').textContent = roomName;
 
     // 3. (모든 방 링크에서 'active' 클래스 제거)
-    document.querySelectorAll('#room-list .list-group-item').forEach(el => {
+    document.querySelectorAll('#room-list .room-link-item').forEach(el => {
         el.classList.remove('active');
     });
     // 4. (클릭한 방에 'active' 클래스 추가)
