@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ChatMessageDto {
     private final Long roomId;
     private final Long memberId;
+    private final String sender;
     private final String context;
     private final LocalDateTime createdAt;
 
@@ -19,6 +20,7 @@ public class ChatMessageDto {
         return new ChatMessageDto(
                 chatMessage.getChatRoom().getId(),
                 chatMessage.getMember().getId(),
+                chatMessage.getMember().getName(),
                 chatMessage.getContext(),
                 chatMessage.getCreatedAt());
 

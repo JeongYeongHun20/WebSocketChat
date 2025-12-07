@@ -12,11 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/chat")
@@ -54,9 +56,9 @@ public class ChatController {
 
     //@DestinationVariable은 STOMP에서 사용하는 @PathVariable과 같은것
     @MessageMapping("/chat/{roomId}")
-    public void sendMessage(@DestinationVariable Long roomId, String context, SimpMessageHeaderAccessor accessor){
+    public void sendMessage(@DestinationVariable Long roomId, @Payload Map<String, String> messageContent, SimpMessageHeaderAccessor accessor){
         Member member = (Member) accessor.getSessionAttributes().get("LOGIN_USER");
-        ChatMessageDto messageDto=ChatMessageDto.from(chatService.createMessage(roomId, member, context));
+        ChatMessageDto messageDto=ChatMessageDto.from(chatService.createMessage(roomId, member, messageContent.get("content")));
         simpMessagingTemplate.convertAndSend("/topic/room/"+roomId,messageDto);
     }
 

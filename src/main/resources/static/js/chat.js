@@ -58,7 +58,7 @@ function sendMessage(event) {
     }
 }
 
-function showGreeting(message) {
+function showGreeting(chatMessage) {
     const greetingsTbody = document.getElementById('greetings');
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -70,14 +70,13 @@ function showGreeting(message) {
 
     const messageSpan = document.createElement('span');
     // message.sender가 없으면 memberId 사용 (서버 DTO 확인 필요)
-    const sender = message.sender || message.memberId || 'Unknown';
-    messageSpan.textContent = sender + ": " + message.context;
+    const sender = chatMessage.sender || chatMessage.memberId || 'Unknown';
+    messageSpan.textContent = sender + ": " + chatMessage.context;
     messageSpan.style.wordBreak = 'break-all';
 
     const timeSpan = document.createElement('span');
-    const dateObj = message.createdAt ? new Date(message.createdAt) : new Date();
-    const timeString = dateObj.toLocaleTimeString([], { day: '2-digit', hour: '2-digit', minute: '2-digit' });
-    timeSpan.textContent = timeString;
+    const dateObj = chatMessage.createdAt ? new Date(chatMessage.createdAt) : new Date();
+    timeSpan.textContent = dateObj.toLocaleTimeString([], {day: '2-digit', hour: '2-digit', minute: '2-digit'});
     timeSpan.style.color = '#999';
     timeSpan.style.fontSize = '0.8em';
     timeSpan.style.minWidth = '70px';
