@@ -58,37 +58,68 @@ function sendMessage(event) {
     }
 }
 
+// ★★★ [수정됨] 카카오톡 스타일 UI 적용 ★★★
 function showGreeting(chatMessage) {
     const greetingsTbody = document.getElementById('greetings');
+
+    // 테이블 구조 유지를 위한 tr, td 생성
     const tr = document.createElement('tr');
     const td = document.createElement('td');
 
-    const div = document.createElement('div');
-    div.style.display = 'flex';
-    div.style.justifyContent = 'space-between';
-    div.style.alignItems = 'center';
+    // 기존 테이블 스타일 간섭 제거
+    td.style.border = 'none';
+    td.style.padding = '5px 0'; // 위아래 간격만 살짝 줌
 
-    const messageSpan = document.createElement('span');
-    // message.sender가 없으면 memberId 사용 (서버 DTO 확인 필요)
-    const sender = chatMessage.sender || chatMessage.memberId || 'Unknown';
-    messageSpan.textContent = sender + ": " + chatMessage.context;
-    messageSpan.style.wordBreak = 'break-all';
+    // 1. "나"인지 확인
+    // login-username 요소는 auth.js의 setConnected에서 값이 채워집니다.
+    // 서버에서 주는 sender 값이 이메일인지 이름인지에 따라 비교 대상이 달라질 수 있습니다.
+    const myName = document.getElementById('login-username').textContent;
+    const senderName = chatMessage.sender || chatMessage.memberId || 'Unknown';
+    const isMe = (myMemberId === chatMessage.memberId);
+    console.log(myMemberId+" "+chatMessage.memberId)
+    // 2. 전체 컨테이너 (Flex Row)
+    const rowDiv = document.createElement('div');
+    // 내가 보냈으면 'mine', 남이면 'other' 클래스 붙이기 -> CSS에서 방향 결정
+    rowDiv.className = isMe ? 'chat-row mine' : 'chat-row other';
 
+    // 3. 메시지 말풍선 (Bubble)
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'chat-bubble';
+
+    // 남이 보낸 메시지일 때만 이름 표시
+    if (!isMe) {
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontSize = '0.75em';
+        nameDiv.style.marginBottom = '2px';
+        nameDiv.style.color = '#666';
+        nameDiv.textContent = senderName;
+        bubbleDiv.appendChild(nameDiv);
+    }
+
+    const contextSpan = document.createElement('span');
+    contextSpan.textContent = chatMessage.context; // 서버 필드명 확인 (context vs content)
+    bubbleDiv.appendChild(contextSpan);
+
+    // 4. 시간 표시
     const timeSpan = document.createElement('span');
+    timeSpan.className = 'chat-time';
     const dateObj = chatMessage.createdAt ? new Date(chatMessage.createdAt) : new Date();
-    timeSpan.textContent = dateObj.toLocaleTimeString([], {day: '2-digit', hour: '2-digit', minute: '2-digit'});
-    timeSpan.style.color = '#999';
-    timeSpan.style.fontSize = '0.8em';
-    timeSpan.style.minWidth = '70px';
-    timeSpan.style.textAlign = 'right';
-    timeSpan.style.marginLeft = '10px';
+    timeSpan.textContent = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.appendChild(messageSpan);
-    div.appendChild(timeSpan);
-    td.appendChild(div);
+    if(isMe){
+        rowDiv.appendChild(timeSpan);
+        rowDiv.appendChild(bubbleDiv);
+    }else{
+        rowDiv.appendChild(bubbleDiv);
+        rowDiv.appendChild(timeSpan);
+    }
+
+
+    td.appendChild(rowDiv);
     tr.appendChild(td);
     greetingsTbody.appendChild(tr);
 
+    // 스크롤 맨 아래로
     const wrapper = document.getElementById('conversation-wrapper');
     if (wrapper) wrapper.scrollTop = wrapper.scrollHeight;
 }

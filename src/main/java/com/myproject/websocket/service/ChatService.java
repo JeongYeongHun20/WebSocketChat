@@ -6,6 +6,7 @@ import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.domain.MemberRoom;
 import com.myproject.websocket.dto.ChatMessageDto;
 import com.myproject.websocket.dto.ChatRoomDto;
+import com.myproject.websocket.dto.MemberDto;
 import com.myproject.websocket.repository.ChatMessageRepository;
 import com.myproject.websocket.repository.ChatRoomRepository;
 import com.myproject.websocket.repository.MemberRepository;
@@ -28,7 +29,7 @@ public class ChatService {
     private final MemberRepository memberRepository;
 
 
-    public List<ChatRoomDto> findRooms(Member loginUser){
+    public List<ChatRoomDto> findRooms(MemberDto loginUser){
         return memberRoomRepository.findByMember(loginUser.getId())
                 .stream()
                 .map(mr->ChatRoomDto.from(mr.getChatRoom()))
@@ -58,7 +59,7 @@ public class ChatService {
         return chatMessageDtos;
     }
 
-    public ChatMessage createMessage(Long roomId, Member member, String context){
+    public ChatMessage createMessage(Long roomId, MemberDto member, String context){
         log.info("createMessage");
         Member loginUser = memberRepository.findById(member.getId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다"));
@@ -68,7 +69,7 @@ public class ChatService {
         return chatMessageRepository.save(chatMessage);
     }
 
-    public ChatRoomDto joinRoom(Long roomId, Member member){
+    public ChatRoomDto joinRoom(Long roomId, MemberDto member){
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방 입니다."));
         Member loginUser = memberRepository.findById(member.getId())
@@ -76,7 +77,7 @@ public class ChatService {
 
         //존재하는 채팅방 중복 생성 방지
         //차후에 예외처리 대신 존재하는 채팅방으로 연결
-        if (memberRoomRepository.findByMemberAndChatRoom(member, chatRoom).isPresent()){
+        if (memberRoomRepository.findMemberRoom(member.getId(), chatRoom.getId()).isPresent()){
             throw new IllegalStateException("이미 존재하는 채팅방 입니다");
         }
 

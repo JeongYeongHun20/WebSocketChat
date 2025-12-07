@@ -1,6 +1,7 @@
 package com.myproject.websocket.service;
 
 import com.myproject.websocket.domain.Member;
+import com.myproject.websocket.dto.MemberDto;
 import com.myproject.websocket.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class LoginService {
     private final MemberRepository memberRepository;
 
-    public Member findMember(String email, String pwd){
+    public MemberDto findMember(String email, String pwd){
         Member member = memberRepository.findByEmail(email);
         if (member == null) {
 
@@ -19,7 +20,7 @@ public class LoginService {
         if (!member.getPwd().equals(pwd)){
             throw new IllegalStateException("비밀번호가 틀립니다.");
         }
+        return MemberDto.from(member);
 
-        return member;
     }
 }

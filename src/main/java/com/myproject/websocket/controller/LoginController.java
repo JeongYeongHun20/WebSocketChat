@@ -1,6 +1,7 @@
 package com.myproject.websocket.controller;
 
 import com.myproject.websocket.domain.Member;
+import com.myproject.websocket.dto.MemberDto;
 import com.myproject.websocket.repository.MemberRepository;
 import com.myproject.websocket.service.LoginService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,15 +21,16 @@ public class LoginController {
     private final LoginService loginService;
     @PostMapping("/login")
     @ResponseBody
-    public ResponseEntity<String> login(@RequestParam("email")String email, @RequestParam("pwd")String pwd, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestParam("email")String email, @RequestParam("pwd")String pwd, HttpServletRequest request) {
 
         try {
-            Member member = loginService.findMember(email, pwd);
+            MemberDto memberDto = loginService.findMember(email, pwd);
             HttpSession session = request.getSession();
-            session.setAttribute("LOGIN_USER", member);
-            log.info("로그인 성공: {}", member.getName());
+            session.setAttribute("LOGIN_USER", memberDto);
+            log.info("로그인 성공: {}", memberDto.getName());
 
-            return ResponseEntity.ok("로그인 성공");
+            return ResponseEntity.ok(memberDto);
+
         }catch (IllegalArgumentException e){
             log.warn("로그인 실패: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());

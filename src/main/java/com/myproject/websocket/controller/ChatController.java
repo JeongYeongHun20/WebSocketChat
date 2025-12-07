@@ -4,6 +4,7 @@ package com.myproject.websocket.controller;
 import com.myproject.websocket.domain.Member;
 import com.myproject.websocket.dto.ChatMessageDto;
 import com.myproject.websocket.dto.ChatRoomDto;
+import com.myproject.websocket.dto.MemberDto;
 import com.myproject.websocket.service.ChatService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -34,7 +35,7 @@ public class ChatController {
         //session이 없을시 true: 새로 생서한 session반환, false: null값을 반환
         HttpSession session=request.getSession(false);
         loginCheck(session);
-        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        MemberDto loginUser = (MemberDto) session.getAttribute("LOGIN_USER");
 
         return chatService.findRooms(loginUser);
     }
@@ -57,7 +58,7 @@ public class ChatController {
     //@DestinationVariable은 STOMP에서 사용하는 @PathVariable과 같은것
     @MessageMapping("/chat/{roomId}")
     public void sendMessage(@DestinationVariable Long roomId, @Payload Map<String, String> messageContent, SimpMessageHeaderAccessor accessor){
-        Member member = (Member) accessor.getSessionAttributes().get("LOGIN_USER");
+        MemberDto member = (MemberDto) accessor.getSessionAttributes().get("LOGIN_USER");
         ChatMessageDto messageDto=ChatMessageDto.from(chatService.createMessage(roomId, member, messageContent.get("content")));
         simpMessagingTemplate.convertAndSend("/topic/room/"+roomId,messageDto);
     }
@@ -66,7 +67,7 @@ public class ChatController {
     public ChatRoomDto joinRoom(@PathVariable(name = "roomId") Long roomId, HttpServletRequest request ){
         log.info("joinRoom");
         HttpSession session = request.getSession(false);
-        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        MemberDto loginUser = (MemberDto) session.getAttribute("LOGIN_USER");
         return chatService.joinRoom(roomId, loginUser);
 
 

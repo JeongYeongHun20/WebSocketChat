@@ -86,6 +86,60 @@
             border: none;
             border-left: 1px solid #ddd; /* 이름과 버튼 사이 구분선 */
         }
+        /* 채팅 메시지 한 줄의 컨테이너 */
+        .chat-row {
+            display: flex;
+            width: 100%;
+            align-items: flex-end; /* 아래쪽 정렬 (시간이 바닥에 붙게) */
+            margin-bottom: 10px;
+
+        }
+
+        /* 1. 내가 보낸 메시지 (오른쪽 정렬 + 순서 반전) */
+        .chat-row.mine {
+            justify-content: flex-end;     /* 오른쪽 정렬 */
+        }
+
+        /* 2. 남이 보낸 메시지 (왼쪽 정렬) */
+        .chat-row.other {
+            justify-content: flex-start;   /* 왼쪽 정렬 */
+        }
+
+        /* 메시지 말풍선 디자인 */
+        .chat-bubble {
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            word-break: break-all;
+            position: relative;
+        }
+
+        /* 내 말풍선 색상 (노란색/파란색 등) */
+        .chat-row.mine .chat-bubble {
+            background-color: #ffec42; /* 카카오톡 노란색 예시 */
+            margin-left: 5px;          /* 시간과의 간격 */
+            border-top-right-radius: 0; /* 말풍선 꼬리 느낌 */
+        }
+
+        /* 남의 말풍선 색상 (흰색/회색) */
+        .chat-row.other .chat-bubble {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            margin-right: 5px;         /* 시간과의 간격 */
+            border-top-left-radius: 0;
+        }
+
+        /* 시간 텍스트 */
+        .chat-time {
+            font-size: 0.75em;
+            color: #999;
+            min-width: 50px;
+            margin-bottom: 2px; /* 바닥에서 살짝 띄우기 */
+        }
+
+        /* (옵션) 내가 보낸 건 시간 정렬도 오른쪽, 남은 왼쪽 */
+        .chat-row.mine .chat-time { text-align: right; }
+        .chat-row.other .chat-time { text-align: left; }
     </style>
 </head>
 <body>

@@ -1,4 +1,5 @@
 // 로그인, 회원가입, UI 상태 변경 로직
+let myMemberId = null;
 
 function setConnected(connected) {
     document.getElementById('login-form').style.display = connected ? 'none' : 'block';
@@ -82,11 +83,12 @@ function login() {
     })
         .then(response => {
             if (!response.ok) throw new Error("HTTP " + response.status);
-            return response.text();
+            return response.json();
         })
         .then(text => {
             console.log("Login Success:", text);
-            activateWebSocket(); // chat.js에 있는 함수 호출
+            myMemberId=text.id;
+            activateWebSocket();
         })
         .catch(error => {
             console.error("Login failed:", error);
