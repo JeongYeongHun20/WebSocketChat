@@ -91,6 +91,10 @@ public class ChatService {
     @Transactional
     public void deleteRoom(Long memberId, Long roomId){
         memberRoomRepository.deleteRoom(memberId, roomId);
+        if (memberRoomRepository.findByChatRoom(roomId).isEmpty()){
+            chatRoomRepository.deleteById(roomId);
+        }
+
 
     }
 

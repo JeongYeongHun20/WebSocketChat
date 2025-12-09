@@ -1,5 +1,6 @@
 package com.myproject.websocket.repository;
 
+import com.myproject.websocket.domain.ChatRoom;
 import com.myproject.websocket.domain.MemberRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,4 +26,7 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     @Query("DELETE FROM MemberRoom mr WHERE mr.member.id = :memberId AND mr.chatRoom.id = :roomId")
     void deleteRoom(@Param("memberId") Long memberId,@Param("roomId") Long roomId);
 
+    @Query("SELECT mr FROM MemberRoom mr " +
+            "WHERE mr.chatRoom.id=:roomId")
+    List<MemberRoom> findByChatRoom(@Param("roomId") Long roomId);
 }

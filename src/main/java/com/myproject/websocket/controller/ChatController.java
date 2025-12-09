@@ -74,10 +74,10 @@ public class ChatController {
     }
 
     @DeleteMapping("/rooms/{roomId}")
-    public ResponseEntity<String> deleteRoom(@PathVariable(name = "roomId") Long roomId, HttpServletRequest request){
+    public ResponseEntity<String> exitRoom(@PathVariable(name = "roomId") Long roomId, HttpServletRequest request){
         log.info("deleteRoom");
         HttpSession session=request.getSession(false);
-        Member loginUser = (Member) session.getAttribute("LOGIN_USER");
+        MemberDto loginUser = (MemberDto) session.getAttribute("LOGIN_USER");
         chatService.deleteRoom(loginUser.getId(), roomId);
         return ResponseEntity.ok("delete complete");
     }
