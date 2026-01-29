@@ -25,7 +25,7 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-\\wsl.localhost\Ubuntu-24.04\home\jyh\projects\websocket\src\main\resources\application.yaml
+!**/src/main/**/application.yaml
 
 ### NetBeans ###
 /nbproject/private/
@@ -37,4 +37,5 @@ out/
 ### VS Code ###
 .vscode/
 ### docker ###
-\\wsl.localhost\Ubuntu-24.04\home\jyh\projects\websocket\docker-compose.yml
+docker-compose.yml
+postgres_data/
