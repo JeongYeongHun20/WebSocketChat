@@ -49,7 +49,7 @@ public class ChatController {
         return chatService.createRoom(loginUser, roomName);
     }
 
-    @GetMapping("/room/{roomId}/messages")
+    @GetMapping("/rooms/{roomId}/messages")
     public List<ChatMessageDto> loadMessages(@PathVariable(name = "roomId") Long roomId){
         log.info("EnterLoadMessages");
         return chatService.findMessages(roomId);

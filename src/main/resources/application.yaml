@@ -3,14 +3,12 @@ spring:
     name: websocket
   datasource:
     # MariaDB JDBC 드라이버 클래스 이름
-    driver-class-name: org.mariadb.jdbc.Driver
 
     # DB 연결 URL
     # (localhost의 3306 포트에 있는 WebSocket DB에 연결)
-    url: "jdbc:mariadb://localhost:3306/WebSocket"
-
-    username: dev_user
-    password: 09180918pp
+    url: jdbc:postgresql://localhost:5432/chatdb
+    username: devuser
+    password: 35703570pp
 
     # (JPA를 사용하시는 경우 추가)
   jpa:

@@ -65,7 +65,7 @@ function switchRoom(roomId, roomName) {
     if(activeLink) activeLink.classList.add('active');
 
     // 과거 메시지 로드
-    fetch(`/chat/room/${roomId}/messages`)
+    fetch(`/chat/rooms/${roomId}/messages`)
         .then(response => response.json())
         .then(messages => {
             document.getElementById('greetings').innerHTML = '';

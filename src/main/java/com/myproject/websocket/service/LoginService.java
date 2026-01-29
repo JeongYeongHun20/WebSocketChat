@@ -15,7 +15,7 @@ public class LoginService {
         Member member = memberRepository.findByEmail(email);
         if (member == null) {
 
-            throw new IllegalStateException("존재하지 않는 멤버");
+            throw new IllegalStateException("존재하지 않는 멤버이다");
         }
         if (!member.getPwd().equals(pwd)){
             throw new IllegalStateException("비밀번호가 틀립니다.");
